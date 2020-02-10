@@ -356,4 +356,118 @@ void user_rf_pre_init()
 
 void ICACHE_RAM_ATTR user_spi_flash_dio_to_qio_pre_init() {}
 
+#ifdef NONOSDK3V0
+/* Following code is a hack to support using the released version of the
+ * NONO V3 SDK. It handles defined the partion tables and also deals with
+ * uninitialised PHY flash data. There is almost certainly a better way of
+ * doing this!
+ */
+
+/* Defines extracted from the V3 SDK, placed here to minimize changes in the
+ * reset of the source base.
+ */
+typedef enum {
+    SYSTEM_PARTITION_INVALID = 0,
+    SYSTEM_PARTITION_BOOTLOADER,            /* user can't modify this partition address, but can modify size */
+    SYSTEM_PARTITION_OTA_1,                 /* user can't modify this partition address, but can modify size */
+    SYSTEM_PARTITION_OTA_2,                 /* user can't modify this partition address, but can modify size */
+    SYSTEM_PARTITION_RF_CAL,                /* user must define this partition */
+    SYSTEM_PARTITION_PHY_DATA,              /* user must define this partition */
+    SYSTEM_PARTITION_SYSTEM_PARAMETER,      /* user must define this partition */
+    SYSTEM_PARTITION_AT_PARAMETER,
+    SYSTEM_PARTITION_SSL_CLIENT_CERT_PRIVKEY,
+    SYSTEM_PARTITION_SSL_CLIENT_CA,
+    SYSTEM_PARTITION_SSL_SERVER_CERT_PRIVKEY,
+    SYSTEM_PARTITION_SSL_SERVER_CA,
+    SYSTEM_PARTITION_WPA2_ENTERPRISE_CERT_PRIVKEY,
+    SYSTEM_PARTITION_WPA2_ENTERPRISE_CA,
+
+    SYSTEM_PARTITION_CUSTOMER_BEGIN = 100,  /* user can define partition after here */
+    SYSTEM_PARTITION_MAX
+} partition_type_t;
+
+typedef struct {
+    partition_type_t type;    /* the partition type */
+    uint32_t addr;            /* the partition address */
+    uint32_t size;            /* the partition size */
+} partition_item_t;
+
+/**
+  * @brief     regist partition table information, user MUST call it in user_pre_init()
+  *
+  * @param     partition_table: the partition table
+  * @param     partition_num:   the partition number in partition table
+  * @param     map:             the flash map
+  *
+  * @return  true : succeed
+  * @return false : fail
+  */
+bool system_partition_table_regist(
+        const partition_item_t* partition_table,
+        uint32_t partition_num,
+        uint32_t map
+    );
+
+
+void ICACHE_FLASH_ATTR user_pre_init(void)
+{
+    const uint32_t SYS_SIZE = 0x3000;
+    const uint32_t PHY_SIZE = 0x1000;
+    const uint32_t CAL_SIZE = 0x1000;
+    const uint32_t memsize = flashchip->chip_size;
+    const uint32_t sys_loc = memsize - SYS_SIZE;
+    const uint32_t phy_loc = sys_loc - PHY_SIZE;
+    const uint32_t cal_loc = phy_loc - CAL_SIZE;
+    uint8_t buf[sizeof(phy_init_data)];
+
+    // We need to check that there is valid data in the PHY partition to
+    // avoid the system boot looping
+    uint32_t sig;
+    if (spi_flash_read(phy_loc, &sig, sizeof(sig)) != SPI_FLASH_RESULT_OK)
+        ets_printf("Error reading sig\n");
+    if ((sig & 0xff) != 0x5)
+    {
+        if (spi_flash_erase_sector(phy_loc/0x1000) != SPI_FLASH_RESULT_OK)
+	    ets_printf("Error erasing sector\n");
+        if (spi_flash_read(phy_loc, &sig, sizeof(sig)) != SPI_FLASH_RESULT_OK)
+            ets_printf("Error reading sig\n");
+	// We can't copy the constant data directly from flas to flash
+        memcpy(buf, phy_init_data, sizeof(phy_init_data));
+        if (spi_flash_write(phy_loc, (uint32_t *)buf, sizeof(phy_init_data)) != SPI_FLASH_RESULT_OK)
+	    ets_printf("Error writing phy data\n");
+    }
+
+    // now define the partition layout we use
+    const partition_item_t part_table[] =
+    {
+        {SYSTEM_PARTITION_RF_CAL,
+         cal_loc,
+         CAL_SIZE},
+        {SYSTEM_PARTITION_PHY_DATA,
+         phy_loc,
+         PHY_SIZE},
+        {SYSTEM_PARTITION_SYSTEM_PARAMETER,
+         sys_loc,
+         SYS_SIZE},
+    };
+    uint32_t map = 4;
+    if (memsize == 0x100000)
+        map = 2;
+    else if (memsize == 0x200000)
+        map = 3;
+    else if (memsize == 0x400000)
+        map = 4;
+    else
+        ets_printf("Unsupported flash size 0x%x\n", memsize);
+
+    if (!system_partition_table_regist(part_table, sizeof(part_table)/sizeof(part_table[0]), map))
+    {
+	ets_printf("Failed to set partition table\n");
+	while (1) {}
+    }
+}
+
+#endif
+
+
 };
