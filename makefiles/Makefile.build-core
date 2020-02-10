@@ -1,0 +1,39 @@
+
+ROOT	= .
+
+BUILD_DIR = $(BUILD)/$(NONO)
+LIB_CORE = $(LIB_RELEASE)
+
+OBJ = \
+	$(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard cores/esp8266/*.cpp)) \
+	$(patsubst %.c,$(BUILD_DIR)/%.o,$(wildcard cores/esp8266/*.c)) \
+	$(patsubst %.S,$(BUILD_DIR)/%.o,$(wildcard cores/esp8266/*.S)) \
+	$(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard cores/esp8266/libb64/*.cpp)) \
+	$(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard cores/esp8266/spiffs/*.cpp)) \
+	$(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard cores/esp8266/umm_malloc/*.cpp)) \
+	$(patsubst %.c,$(BUILD_DIR)/%.o,$(wildcard cores/esp8266/umm_malloc/*.c)) \
+	$(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard libraries/DNSServer/src/*.cpp)) \
+	$(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard libraries/EEPROM/*.cpp)) \
+	$(patsubst %.cpp,$(BUILD_DIR)/%.o,$(wildcard libraries/ESP8266WiFi/src/*.cpp)) \
+
+BUILD_INCLUDES = -I$(BUILD_DIR) -Itools/sdk/include -Itools/sdk/libc/xtensa-lx106-elf/include -Icores/esp8266 -Ibootloaders/eboot -Ivariants/nodemcu -Ilibraries/ESP8266WiFi/src -Itools/sdk/lwip2/include
+
+include makefiles/Makefile.defs
+include makefiles/Makefile.rules
+
+all: $(LIB_CORE)
+
+install: $(LIB_CORE)
+	cp $(LIB_CORE) tools/sdk/lib
+	cp $(BUILD_DIR)/cores/esp8266/heap.o tools/sdk/lib
+
+$(LIB_CORE): $(OBJ)
+
+clean:
+	rm -rf $(BUILD)
+
+-include $(BUILD_DIR)/*/*.d
+-include $(BUILD_DIR)/*/*/*.d
+-include $(BUILD_DIR)/*/*/*/*.d
+
+

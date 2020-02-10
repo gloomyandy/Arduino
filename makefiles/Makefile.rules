@@ -1,0 +1,19 @@
+
+$(BUILD_DIR)/%.h:
+	@mkdir -p $(dir $@)
+	@touch $@
+
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(BUILD_FLAGS) $(BUILD_DEFINES) $(BUILD_INCLUDES) $< -o $@
+
+$(BUILD_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CPP) $(CPP_BUILD_FLAGS) $(BUILD_DEFINES) $(BUILD_INCLUDES) $< -o $@
+
+$(BUILD_DIR)/%.o: %.S
+	@mkdir -p $(dir $@)
+	$(AS) --text-section-literals $< -o $@
+
+$(LIB_CORE): $(OBJ)
+	$(AR) cru $@ $(OBJ)
