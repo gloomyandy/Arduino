@@ -1,4 +1,4 @@
-Arduino core for ESP8266 Support for Duet WiFi Moduke
+Arduino core for ESP8266 Support for Duet WiFi Module
 ===========================================
 
 # Arduino Core ESP8266 SDK support for the Duet WiFi Socket Server
