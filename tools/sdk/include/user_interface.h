@@ -249,12 +249,16 @@ typedef struct {
 struct station_config {
     uint8 ssid[32];
     uint8 password[64];
+#ifdef NONOSDK3V0
+    uint8 channel;
+#endif
     uint8 bssid_set;    // Note: If bssid_set is 1, station will just connect to the router
                         // with both ssid[] and bssid[] matched. Please check about this.
     uint8 bssid[6];
     wifi_fast_scan_threshold_t threshold;
 #ifdef NONOSDK3V0
     bool open_and_wep_mode_disable; // Can connect to open/wep router by default.
+    bool all_channel_scan;
 #endif
 };
 
