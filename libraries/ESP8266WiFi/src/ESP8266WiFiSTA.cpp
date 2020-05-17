@@ -102,6 +102,12 @@ static bool sta_config_equal(const station_config& lhs, const station_config& rh
     if (lhs.open_and_wep_mode_disable != rhs.open_and_wep_mode_disable) {
         return false;
     }
+    if (lhs.channel != rhs.channel) {
+        return false;
+    }
+    if (lhs.all_channel_scan != rhs.all_channel_scan) {
+        return false;
+    }
 #endif
 
     return true;
