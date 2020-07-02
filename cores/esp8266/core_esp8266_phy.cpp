@@ -433,8 +433,25 @@ void ICACHE_FLASH_ATTR user_pre_init(void)
             ets_printf("Error reading sig\n");
 	// We can't copy the constant data directly from flas to flash
         memcpy(buf, phy_init_data, sizeof(phy_init_data));
+        ((uint8_t*)buf)[107] = __get_adc_mode();
+
         if (spi_flash_write(phy_loc, (uint32_t *)buf, sizeof(phy_init_data)) != SPI_FLASH_RESULT_OK)
 	    ets_printf("Error writing phy data\n");
+    }
+    else
+    {
+        if (spi_flash_read(phy_loc, (uint32_t *)buf, sizeof(phy_init_data)) != SPI_FLASH_RESULT_OK)
+            ets_printf("Error reading existing\n");
+        ets_printf("phy buf[107] is %x adc mode is %x\n", buf[107], __get_adc_mode());
+        if (buf[107] != __get_adc_mode())
+        {
+            ets_printf("Updating byte 107 with new settings\n");
+            if (spi_flash_erase_sector(phy_loc/0x1000) != SPI_FLASH_RESULT_OK)
+                ets_printf("Error erasing sector\n");
+            ((uint8_t*)buf)[107] = __get_adc_mode();
+            if (spi_flash_write(phy_loc, (uint32_t *)buf, sizeof(phy_init_data)) != SPI_FLASH_RESULT_OK)
+	        ets_printf("Error writing phy data\n");
+	}
     }
 
     // now define the partition layout we use
