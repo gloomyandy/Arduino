@@ -22,4 +22,4 @@ OD			= $(TOOLS)objdump
 
 CPP_BUILD_FLAGS += -Wall -Wextra -c -Os -g -Wpointer-arith -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -falign-functions=4 -MMD -ffunction-sections -fdata-sections
 BUILD_FLAGS += -Wall -Wextra -c -Os -g -Wpointer-arith -Wl,-EL -fno-inline-functions -nostdlib -mlongcalls -mtext-section-literals -falign-functions=4 -MMD -ffunction-sections -fdata-sections
-BUILD_DEFINES = -D__ets__ -DICACHE_FLASH -U__STRICT_ANSI__ -DF_CPU=80000000L -DARDUINO=10606 -DARDUINO_ESP8266_ESP12 -DARDUINO_ARCH_ESP8266 -DESP8266 -DLWIP_OPEN_SRC -DTCP_MSS=1 -DLWIP_FEATURES=1 -DLWIP_IPV6=0 -DLWIP_MDNS_RESPONDER=1 -D$(NONO)=1 
+BUILD_DEFINES = -D__ets__ -DICACHE_FLASH -U__STRICT_ANSI__ -DF_CPU=80000000L -DARDUINO=10606 -DARDUINO_ESP8266_ESP12 -DARDUINO_ARCH_ESP8266 -DESP8266 -DLWIP_OPEN_SRC -DTCP_MSS=1 -DLWIP_FEATURES=1 -DLWIP_IPV6=0 -DLWIP_MDNS_RESPONDER=1 -DMDNS_MAX_SERVICES=10 -D$(NONO)=1 
